@@ -7,14 +7,15 @@ from django.db.models.sql import EmptyResultSet
 
 from .mixins import (
     CacheBackendMixin,
-    CacheInvalidateMixin,
     CacheKeyMixin,
 )
+
+from .helpers import invalidate_modelqueryset_cache
 
 logger = logging.getLogger(__name__)
 
 
-class CacheManager(CacheInvalidateMixin, models.Manager):
+class CacheManager(models.Manager):
     """
     Custom model manager that returns CachingQuerySet
     """
@@ -32,7 +33,7 @@ class CacheManager(CacheInvalidateMixin, models.Manager):
         return CachingQuerySet(self.model, using=self._db)
 
 
-class CachingQuerySet(CacheBackendMixin, CacheKeyMixin, CacheInvalidateMixin, QuerySet):
+class CachingQuerySet(CacheBackendMixin, CacheKeyMixin, QuerySet):
     """
     Custom query set that caches results on load. This query set will force iteration of the result set
     so that the results can be cached for future calls.
@@ -55,9 +56,19 @@ class CachingQuerySet(CacheBackendMixin, CacheKeyMixin, CacheInvalidateMixin, Qu
             yield result
 
     def bulk_create(self, *args, **kwargs):
-        self.invalidate_model_cache()
+        self.invalidate()
         return super(CachingQuerySet, self).bulk_create(*args, **kwargs)
 
     def update(self, **kwargs):
-        self.invalidate_model_cache()
+        self.invalidate()
         return super(CachingQuerySet, self).update(**kwargs)
+
+    def invalidate(self):
+        log_msg = self.get_log_msg
+        invalidate_modelqueryset_cache(self.model, log_msg)
+
+    @property
+    def get_log_msg(self):
+        msg = 'Invalidating cache for table'
+        log_msg = '{}{}'.format(msg, self.model._meta.db_table)
+        return log_msg

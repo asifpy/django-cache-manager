@@ -32,7 +32,7 @@ class CacheManagerTests(TestCase):
         self.assertTrue(isinstance(self.cache_manager.get_queryset(), CachingQuerySet))        
         
 
-@patch.object(CachingQuerySet, 'invalidate_model_cache')
+@patch.object(CachingQuerySet, 'invalidate')
 @patch.object(CachingQuerySet, 'cache_backend')
 @patch.object(CachingQuerySet, 'generate_key')
 class CachingQuerySetTests(TestCase):
@@ -46,7 +46,7 @@ class CachingQuerySetTests(TestCase):
         self.query_set = Manufacturer.objects.filter(name='name')
         ManufacturerFactory.create(name='name')
 
-    def test_iterate_cache_hit(self, mock_generate_key, mock_cache_backend, invalidate_model_cache):
+    def test_iterate_cache_hit(self, mock_generate_key, mock_cache_backend, invalidate):
         """
         A cache hit will not result in call to the database.
         """
@@ -66,7 +66,7 @@ class CachingQuerySetTests(TestCase):
         self.assertEquals(results[0].name, 'name')
         self.assertEquals(mock_cache_backend.set.call_count, 1)
 
-    def test_bulk_create(self, mock_generate_key, mock_cache_backend, invalidate_model_cache):
+    def test_bulk_create(self, mock_generate_key, mock_cache_backend, invalidate):
         """
         Bulk create invalidates model cache
         """
@@ -74,7 +74,7 @@ class CachingQuerySetTests(TestCase):
             Manufacturer(name='Toyota'),
             Manufacturer(name='BMW'),
         ])
-        self.assertEquals(invalidate_model_cache.call_count, 1)
+        self.assertEquals(invalidate.call_count, 1)
 
     def test_update(self, mock_generate_key, mock_cache_backend, invalidate_model_cache):
         """

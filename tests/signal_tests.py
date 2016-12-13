@@ -8,10 +8,10 @@ from django_cache_manager.model_cache_sharing.types import ModelCacheInfo
 from .models import Manufacturer
 
 
-@patch('django_cache_manager.models.model_cache_backend')
+@patch('django_cache_manager.helpers.model_cache_backend')
 class SignalTests(TestCase):
 
-    @patch('django_cache_manager.models.uuid')
+    @patch('django_cache_manager.helpers.uuid')
     def test_invalidate_model_cache(self, mock_uuid, mock_model_cache):
         """
         Signal hooks broadcasts new model cache info when called
