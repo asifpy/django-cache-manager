@@ -44,7 +44,7 @@ def invalidate_modelqueryset_cache(model, log_msg):
 
         model_fields = model._meta.fields
         related_tables |= set([
-            field.rel.to._meta.db_table for field in model_fields if is_related_field()]
+            field.rel.to._meta.db_table for field in model_fields if is_related_field(field)]
         )
 
     logger.debug(
